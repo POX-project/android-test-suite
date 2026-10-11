@@ -1,0 +1,30 @@
+# Android Testing Suite - Universal thresholds
+# Loaded by AuditEngine (no pyyaml dependency - simple parser).
+# Per-SoC baselines keep scoring fair across low-end and flagship.
+
+default:
+  max_temp_warning_c: 80.0
+  max_temp_critical_c: 90.0
+  min_storage_write_mbps: 30.0
+  min_storage_read_mbps: 80.0
+  min_battery_wear_pct: 80.0
+  critical_battery_wear_pct: 60.0
+
+# Low-end eMMC (e.g. Exynos 7904 / SM-M205F): sequential ~120 MB/s is normal
+exynos_7904:
+  max_temp_warning_c: 75.0
+  max_temp_critical_c: 85.0
+  min_storage_write_mbps: 30.0
+  min_storage_read_mbps: 80.0
+
+snapdragon_8_gen_2:
+  max_temp_warning_c: 85.0
+  max_temp_critical_c: 95.0
+  min_storage_write_mbps: 500.0
+  min_storage_read_mbps: 800.0
+
+tensor_g3:
+  max_temp_warning_c: 82.0
+  max_temp_critical_c: 92.0
+  min_storage_write_mbps: 400.0
+  min_storage_read_mbps: 600.0

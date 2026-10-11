@@ -1,0 +1,75 @@
+name: CI & Validation
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Validate Python (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax & Bytecode Compilation
+        run: |
+          python -m compileall -q android_tester config main.py test_headless.py
+
+      - name: Test Module Imports & Bridge Fallback
+        run: |
+          python3 test_headless.py
+
+  release:
+    name: Publish Tagged Release
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create Release Archive
+        run: |
+          tar -czvf android-test-suite-${{ github.ref_name }}.tar.gz android_tester config main.py test_headless.py requirements.txt README.md LICENSE
+          sha256sum android-test-suite-${{ github.ref_name }}.tar.gz > android-test-suite-${{ github.ref_name }}.tar.gz.sha256
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android-test-suite-${{ github.ref_name }}.tar.gz
+            android-test-suite-${{ github.ref_name }}.tar.gz.sha256
+          name: "Android Test Suite ${{ github.ref_name }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
